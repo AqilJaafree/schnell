@@ -3,28 +3,24 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePrivy } from '@privy-io/expo';
 import { Colors, Fonts, FontSizes } from '../constants/theme';
-import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
 
 export default function SplashScreen() {
   const router = useRouter();
   const { isReady, user } = usePrivy();
-  const { isComplete: onboardingComplete } = useOnboardingStatus();
 
   useEffect(() => {
-    if (!isReady || onboardingComplete === null) return;
+    if (!isReady) return;
 
     const timer = setTimeout(() => {
-      if (!user) {
-        router.replace('/login');
-      } else if (!onboardingComplete) {
-        router.replace('/onboarding/height-weight');
-      } else {
+      if (user) {
         router.replace('/(tabs)');
+      } else {
+        router.replace('/login');
       }
-    }, 2000);
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isReady, user, onboardingComplete]);
+  }, [isReady, user]);
 
   return (
     <View style={styles.container}>

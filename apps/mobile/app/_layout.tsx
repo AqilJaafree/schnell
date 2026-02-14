@@ -8,12 +8,21 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts, DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
 import * as SplashScreen from 'expo-splash-screen';
 import { Colors } from '../constants/theme';
-import { useOnboardingStatus } from '../hooks/useOnboardingStatus';
+import { OnboardingProvider, useOnboardingStatus } from '../hooks/useOnboardingStatus';
 
 SplashScreen.preventAutoHideAsync();
 
 const privyAppId = process.env.EXPO_PUBLIC_PRIVY_APP_ID ?? '';
 const privyClientId = process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID ?? '';
+
+function AppGate() {
+  const { user } = usePrivy();
+  return (
+    <OnboardingProvider userId={user?.id}>
+      <AuthNavigator />
+    </OnboardingProvider>
+  );
+}
 
 function AuthNavigator() {
   const { isReady, user } = usePrivy();
@@ -22,7 +31,9 @@ function AuthNavigator() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isReady || onboardingComplete === null) return;
+    if (!isReady) return;
+    // When no user, onboardingComplete is null — that's fine, we just redirect to login
+    if (onboardingComplete === null && user) return;
 
     const currentRoute = segments[0];
     const inTabs = currentRoute === '(tabs)';
@@ -49,7 +60,7 @@ function AuthNavigator() {
     }
   }, [isReady, user, onboardingComplete, segments]);
 
-  if (!isReady || onboardingComplete === null) {
+  if (!isReady || (onboardingComplete === null && user)) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -88,7 +99,7 @@ export default function RootLayout() {
         }}
       >
         <PrivyElements />
-        <AuthNavigator />
+        <AppGate />
         <StatusBar style="dark" />
       </PrivyProvider>
     </SafeAreaProvider>

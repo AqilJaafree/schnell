@@ -13,9 +13,11 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
 import ProgressDots from '../../components/ProgressDots';
+import { useOnboardingStatus } from '../../hooks/useOnboardingStatus';
 
 export default function HeightWeightScreen() {
   const router = useRouter();
+  const { markComplete } = useOnboardingStatus();
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [errors, setErrors] = useState<{ height?: string; weight?: string }>({});
@@ -41,9 +43,10 @@ export default function HeightWeightScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (validate()) {
-      router.push('/onboarding/selfie');
+      await markComplete();
+      router.replace('/(tabs)');
     }
   };
 
@@ -58,8 +61,8 @@ export default function HeightWeightScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <ProgressDots totalSteps={3} currentStep={0} />
-            <Text style={styles.stepLabel}>Step 1 of 3</Text>
+            <ProgressDots totalSteps={1} currentStep={0} />
+            <Text style={styles.stepLabel}>Step 1 of 1</Text>
           </View>
 
           <View style={styles.content}>
@@ -109,7 +112,7 @@ export default function HeightWeightScreen() {
               onPress={handleContinue}
               activeOpacity={0.8}
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={styles.continueButtonText}>Get Started</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
