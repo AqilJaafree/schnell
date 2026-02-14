@@ -35,6 +35,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     privyClientId: process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID,
   },
   plugins: [
+    'expo-router',
     'expo-secure-store',
     'expo-apple-authentication',
     'expo-web-browser',
