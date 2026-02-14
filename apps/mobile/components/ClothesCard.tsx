@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSizes, Spacing, BorderRadius } from '../constants/theme';
 import type { ClothingItem } from '../data/dummy';
@@ -16,9 +16,13 @@ export default function ClothesCard({ item, onPress, onToggleSave }: ClothesCard
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <View style={[styles.imagePlaceholder, { backgroundColor: item.color }]}>
-        <Ionicons name="shirt-outline" size={32} color={Colors.surface} />
-      </View>
+      {item.image ? (
+        <Image source={item.image} style={styles.image} resizeMode="cover" />
+      ) : (
+        <View style={[styles.imagePlaceholder, { backgroundColor: item.color }]}>
+          <Ionicons name="shirt-outline" size={32} color={Colors.surface} />
+        </View>
+      )}
       <View style={styles.info}>
         <View style={styles.titleRow}>
           <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
@@ -49,6 +53,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+  },
+  image: {
+    height: 140,
+    width: '100%',
   },
   imagePlaceholder: {
     height: 140,

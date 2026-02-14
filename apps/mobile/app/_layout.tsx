@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useFonts, DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
 import * as SplashScreen from 'expo-splash-screen';
 import { Colors } from '../constants/theme';
+import { tempoModerato } from '../constants/chains';
 import { OnboardingProvider, useOnboardingStatus } from '../hooks/useOnboardingStatus';
 
 SplashScreen.preventAutoHideAsync();
@@ -91,6 +92,7 @@ export default function RootLayout() {
       <PrivyProvider
         appId={privyAppId}
         clientId={privyClientId}
+        supportedChains={[tempoModerato]}
         config={{
           embedded: {
             ethereum: { createOnLogin: 'all-users' },

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   FlatList,
   TouchableOpacity,
   StyleSheet,
@@ -30,14 +31,18 @@ export default function CartScreen() {
   const renderCartItem = ({ item }: { item: CartItem }) => (
     <Card style={styles.cartItemCard}>
       <View style={styles.cartItemRow}>
-        <View
-          style={[
-            styles.itemColorBox,
-            { backgroundColor: item.clothingItem.color },
-          ]}
-        >
-          <Ionicons name="shirt-outline" size={20} color={Colors.surface} />
-        </View>
+        {item.clothingItem.image ? (
+          <Image source={item.clothingItem.image} style={styles.itemImage} resizeMode="cover" />
+        ) : (
+          <View
+            style={[
+              styles.itemColorBox,
+              { backgroundColor: item.clothingItem.color },
+            ]}
+          >
+            <Ionicons name="shirt-outline" size={20} color={Colors.surface} />
+          </View>
+        )}
         <View style={styles.itemDetails}>
           <Text style={styles.itemName} numberOfLines={1}>
             {item.clothingItem.name}
@@ -172,6 +177,11 @@ const styles = StyleSheet.create({
   cartItemRow: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  itemImage: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.sm,
   },
   itemColorBox: {
     width: 56,
