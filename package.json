@@ -1,0 +1,10 @@
+{
+  "name": "schnell",
+  "private": true,
+  "scripts": {
+    "mobile": "pnpm --filter @schnell/mobile",
+    "dev": "pnpm --filter @schnell/mobile start",
+    "android": "pnpm --filter @schnell/mobile android",
+    "ios": "pnpm --filter @schnell/mobile ios"
+  }
+}
