@@ -10,8 +10,8 @@ export default function AvatarScreen() {
   const router = useRouter();
   const { markComplete } = useOnboardingStatus();
 
-  const handleGetStarted = () => {
-    markComplete();
+  const handleGetStarted = async () => {
+    await markComplete();
     router.replace('/(tabs)');
   };
 
