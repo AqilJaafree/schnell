@@ -44,12 +44,12 @@ export interface DeliveryOrder {
 }
 
 export const DUMMY_CLOTHES: ClothingItem[] = [
-  { id: '1', name: 'Light Dress Shirt', brand: 'Essentials', price: 49.99, category: 'tops', saved: false, color: '#F5F5F5', image: require('../assets/clothes/dressshirtlight.jpg') },
-  { id: '2', name: 'Black Dress Shirt', brand: 'Essentials', price: 49.99, category: 'tops', saved: true, color: '#2D2D2D', image: require('../assets/clothes/dressshirtblack.jpg') },
-  { id: '3', name: 'Blue Stripe Shirt', brand: 'ClassicWear', price: 39.99, category: 'tops', saved: false, color: '#4A6FA5', image: require('../assets/clothes/stripeshirtblue.jpeg') },
-  { id: '4', name: "Levi's Light Jeans", brand: "Levi's", price: 89.99, category: 'bottoms', saved: true, color: '#A8C4E0', image: require('../assets/clothes/levis_lightjean.jpg') },
-  { id: '5', name: 'Black Denim Jeans', brand: 'Denim Co', price: 79.99, category: 'bottoms', saved: false, color: '#333333', image: require('../assets/clothes/denimblackjean.jpg') },
-  { id: '6', name: 'White Pants', brand: 'SummerLine', price: 59.99, category: 'bottoms', saved: false, color: '#F0F0F0', image: require('../assets/clothes/whitepants.jpg') },
+  { id: '1', name: 'Light Dress Shirt', brand: 'Essentials', price: 49.99, category: 'tops', saved: false, color: '#F5F5F5', image: require('../assets/clothes/top/dressshirtlight.jpg') },
+  { id: '2', name: 'Black Dress Shirt', brand: 'Essentials', price: 49.99, category: 'tops', saved: true, color: '#2D2D2D', image: require('../assets/clothes/top/dressshirtblack.jpg') },
+  { id: '3', name: 'Blue Stripe Shirt', brand: 'ClassicWear', price: 39.99, category: 'tops', saved: false, color: '#4A6FA5', image: require('../assets/clothes/top/stripeshirtblue.jpeg') },
+  { id: '4', name: "Levi's Light Jeans", brand: "Levi's", price: 89.99, category: 'bottoms', saved: true, color: '#A8C4E0', image: require('../assets/clothes/bottom/levis_lightjean.jpg') },
+  { id: '5', name: 'Black Denim Jeans', brand: 'Denim Co', price: 79.99, category: 'bottoms', saved: false, color: '#333333', image: require('../assets/clothes/bottom/denimblackjean.jpg') },
+  { id: '6', name: 'White Pants', brand: 'SummerLine', price: 59.99, category: 'bottoms', saved: false, color: '#F0F0F0', image: require('../assets/clothes/bottom/whitepants.jpg') },
 ];
 
 export const SUGGESTED_CLOTHES: ClothingItem[] = [
@@ -94,6 +94,9 @@ export const DUMMY_ORDERS: DeliveryOrder[] = [
     trackingNumber: 'TRK-1029384',
   },
 ];
+
+export const TOPS = DUMMY_CLOTHES.filter((c) => c.category === 'tops');
+export const BOTTOMS = DUMMY_CLOTHES.filter((c) => c.category === 'bottoms');
 
 export type ClothingCategory = 'all' | ClothingItem['category'];
 

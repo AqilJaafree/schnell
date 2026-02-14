@@ -1,15 +1,93 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
 import ProgressDots from '../../components/ProgressDots';
 
 export default function SelfieScreen() {
   const router = useRouter();
+  const [selfieUri, setSelfieUri] = useState<string | null>(null);
+  const [isPickerLoading, setIsPickerLoading] = useState(false);
+
+  const launchCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Needed',
+        'Camera access is required to take a selfie. Please enable it in your device settings.'
+      );
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setSelfieUri(result.assets[0].uri);
+    }
+  };
+
+  const launchGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Needed',
+        'Photo library access is required to select a photo. Please enable it in your device settings.'
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setSelfieUri(result.assets[0].uri);
+    }
+  };
+
+  const handleCapture = () => {
+    setIsPickerLoading(true);
+    Alert.alert('Upload a Selfie', 'Choose how you want to upload your photo', [
+      {
+        text: 'Take Photo',
+        onPress: async () => {
+          try {
+            await launchCamera();
+          } finally {
+            setIsPickerLoading(false);
+          }
+        },
+      },
+      {
+        text: 'Choose from Gallery',
+        onPress: async () => {
+          try {
+            await launchGallery();
+          } finally {
+            setIsPickerLoading(false);
+          }
+        },
+      },
+      {
+        text: 'Cancel',
+        style: 'cancel',
+        onPress: () => setIsPickerLoading(false),
+      },
+    ]);
+  };
 
   const handleContinue = () => {
-    router.push('/onboarding/avatar');
+    if (!selfieUri) {
+      Alert.alert('No Photo', 'Please take or upload a selfie to continue, or tap Skip.');
+      return;
+    }
+    router.push({ pathname: '/onboarding/avatar', params: { selfieUri } });
   };
 
   const handleSkip = () => {
@@ -30,11 +108,33 @@ export default function SelfieScreen() {
             Take or upload a photo to create your personalized avatar.
           </Text>
 
-          <TouchableOpacity style={styles.uploadArea} activeOpacity={0.7}>
-            <Ionicons name="camera-outline" size={48} color={Colors.mutedText} />
-            <Text style={styles.uploadText}>Tap to take or upload a photo</Text>
-            <Text style={styles.uploadSubtext}>Coming soon</Text>
+          <TouchableOpacity
+            style={styles.uploadArea}
+            activeOpacity={0.7}
+            onPress={handleCapture}
+          >
+            {selfieUri ? (
+              <Image
+                source={{ uri: selfieUri }}
+                style={styles.selfiePreview}
+                resizeMode="cover"
+              />
+            ) : isPickerLoading ? (
+              <ActivityIndicator size="large" color={Colors.primary} />
+            ) : (
+              <>
+                <Ionicons name="camera-outline" size={48} color={Colors.mutedText} />
+                <Text style={styles.uploadText}>Tap to take or upload a photo</Text>
+              </>
+            )}
           </TouchableOpacity>
+
+          {selfieUri && (
+            <TouchableOpacity style={styles.retakeButton} onPress={handleCapture}>
+              <Ionicons name="refresh-outline" size={16} color={Colors.secondaryText} />
+              <Text style={styles.retakeText}>Retake photo</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.footer}>
@@ -98,20 +198,32 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderStyle: 'dashed',
     borderRadius: BorderRadius.lg,
-    paddingVertical: 60,
+    height: 320,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.surface,
+    overflow: 'hidden',
+  },
+  selfiePreview: {
+    width: '100%',
+    height: '100%',
   },
   uploadText: {
     fontSize: FontSizes.md,
     color: Colors.secondaryText,
     marginTop: Spacing.md,
   },
-  uploadSubtext: {
+  retakeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.md,
+    gap: Spacing.xs,
+  },
+  retakeText: {
     fontSize: FontSizes.sm,
-    color: Colors.mutedText,
-    marginTop: Spacing.xs,
+    color: Colors.secondaryText,
+    textDecorationLine: 'underline',
   },
   footer: {
     gap: Spacing.md,

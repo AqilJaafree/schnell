@@ -1,10 +1,15 @@
+import { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { usePrivy } from '@privy-io/expo';
 import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
+import Avatar3DScene from '../../components/Avatar3DScene';
+import AvatarErrorBoundary from '../../components/AvatarErrorBoundary';
 import AvatarPlaceholder from '../../components/AvatarPlaceholder';
 import ClothesCard from '../../components/ClothesCard';
+import { useAvatarStorage } from '../../hooks/useAvatarStorage';
 import { DUMMY_CLOTHES, DUMMY_CART, DUMMY_USER } from '../../data/dummy';
 
 function getGreeting(): string {
@@ -16,8 +21,27 @@ function getGreeting(): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user } = usePrivy();
+  const { avatarUri, isLoading: avatarLoading } = useAvatarStorage(user?.id);
   const greeting = getGreeting();
   const cartCount = DUMMY_CART.length;
+
+  const tops = useMemo(() => DUMMY_CLOTHES.filter((c) => c.category === 'tops'), []);
+  const bottoms = useMemo(() => DUMMY_CLOTHES.filter((c) => c.category === 'bottoms'), []);
+
+  const [topIndex, setTopIndex] = useState(0);
+  const [bottomIndex, setBottomIndex] = useState(0);
+
+  const currentTop = tops[topIndex];
+  const currentBottom = bottoms[bottomIndex];
+
+  const cycleTop = (direction: 1 | -1) => {
+    setTopIndex((prev) => (prev + direction + tops.length) % tops.length);
+  };
+
+  const cycleBottom = (direction: 1 | -1) => {
+    setBottomIndex((prev) => (prev + direction + bottoms.length) % bottoms.length);
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -45,9 +69,71 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Avatar Section */}
+            {/* Avatar Section with Clothes Mixing */}
             <View style={styles.avatarSection}>
-              <AvatarPlaceholder size={100} />
+              {avatarLoading ? (
+                <AvatarPlaceholder size={100} />
+              ) : avatarUri ? (
+                <>
+                  <View style={styles.avatarRow}>
+                    {/* Left arrows */}
+                    <View style={styles.arrowColumn}>
+                      <TouchableOpacity
+                        style={styles.arrowButton}
+                        onPress={() => cycleTop(-1)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={Colors.primaryText} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.arrowButton}
+                        onPress={() => cycleBottom(-1)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="chevron-back" size={20} color={Colors.primaryText} />
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* 3D Avatar display */}
+                    <AvatarErrorBoundary avatarUri={avatarUri} fallbackWidth={220} fallbackHeight={340}>
+                      <Avatar3DScene
+                        avatarUri={avatarUri}
+                        topImage={currentTop?.image}
+                        bottomImage={currentBottom?.image}
+                        width={220}
+                        height={340}
+                      />
+                    </AvatarErrorBoundary>
+
+                    {/* Right arrows */}
+                    <View style={styles.arrowColumn}>
+                      <TouchableOpacity
+                        style={styles.arrowButton}
+                        onPress={() => cycleTop(1)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="chevron-forward" size={20} color={Colors.primaryText} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.arrowButton}
+                        onPress={() => cycleBottom(1)}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons name="chevron-forward" size={20} color={Colors.primaryText} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Outfit labels */}
+                  <View style={styles.outfitInfo}>
+                    <Text style={styles.outfitLabel}>{currentTop?.name}</Text>
+                    <Text style={styles.outfitDivider}>|</Text>
+                    <Text style={styles.outfitLabel}>{currentBottom?.name}</Text>
+                  </View>
+                </>
+              ) : (
+                <AvatarPlaceholder size={100} />
+              )}
             </View>
 
             {/* Section Title */}
@@ -117,10 +203,46 @@ const styles = StyleSheet.create({
   },
   avatarSection: {
     alignItems: 'center',
-    paddingVertical: Spacing.xl,
+    paddingVertical: Spacing.lg,
     marginBottom: Spacing.lg,
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
+  },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowColumn: {
+    justifyContent: 'space-around',
+    height: 300,
+    paddingVertical: Spacing.xxl,
+  },
+  arrowButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  outfitInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: Spacing.md,
+    gap: Spacing.sm,
+  },
+  outfitLabel: {
+    fontSize: FontSizes.xs,
+    color: Colors.secondaryText,
+    fontWeight: '500',
+  },
+  outfitDivider: {
+    fontSize: FontSizes.xs,
+    color: Colors.mutedText,
   },
   sectionTitle: {
     fontFamily: Fonts.dmSerifDisplay,

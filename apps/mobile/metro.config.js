@@ -17,4 +17,7 @@ const resolveRequestWithPackageExports = (context, moduleName, platform) => {
 
 config.resolver.resolveRequest = resolveRequestWithPackageExports;
 
+// Three.js modules may use .cjs extension
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'cjs'];
+
 module.exports = config;
