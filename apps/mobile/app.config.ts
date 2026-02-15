@@ -40,6 +40,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-apple-authentication',
     'expo-web-browser',
     [
+      'expo-image-picker',
+      {
+        photosPermission: 'Schnell needs access to your photos to create your avatar.',
+        cameraPermission: 'Schnell needs access to your camera to take a selfie.',
+      },
+    ],
+    [
       'expo-build-properties',
       {
         ios: {
