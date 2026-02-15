@@ -21,6 +21,9 @@ import Card from '../../components/Card';
 import { DUMMY_CART, type ShippingInfo } from '../../data/dummy';
 import { useTempoPayment } from '../../hooks/useTempoPayment';
 
+const MERCHANT_ADDRESS = (process.env.EXPO_PUBLIC_MERCHANT_ADDRESS ??
+  '0xC16C9e5BA678B6B708B0FC7f3601188f40D832DA') as Address;
+
 const INITIAL_SHIPPING: ShippingInfo = {
   fullName: '',
   phoneNumber: '',
@@ -93,9 +96,7 @@ export default function CheckoutScreen() {
       return;
     }
 
-    const merchantAddress = '0xC16C9e5BA678B6B708B0FC7f3601188f40D832DA' as Address;
-
-    await send(merchantAddress, subtotal.toFixed(2), 'Schnell order');
+    await send(MERCHANT_ADDRESS, subtotal.toFixed(2), 'Schnell order');
   };
 
   // Show success alert when txHash is set

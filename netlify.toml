@@ -13,6 +13,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://rpc.moderato.tempo.xyz https://*.privy.io https://generativelanguage.googleapis.com; font-src 'self' data:; frame-src https://*.privy.io;"
 
 [[redirects]]
   from = "/*"

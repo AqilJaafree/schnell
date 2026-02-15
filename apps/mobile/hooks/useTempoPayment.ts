@@ -13,6 +13,22 @@ import {
 import { tempoActions } from 'tempo.ts/viem';
 import { tempoModerato, alphaUsd } from '../constants/chains';
 
+const MAX_PAYMENT_AMOUNT = 10_000; // aUSD
+const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
+
+function sanitizeError(err: any): string {
+  const msg = err?.shortMessage ?? err?.message ?? '';
+  if (msg.includes('insufficient funds') || msg.includes('exceeds balance'))
+    return 'Insufficient balance. Please top up your wallet.';
+  if (msg.includes('user rejected') || msg.includes('User denied'))
+    return 'Transaction was cancelled.';
+  if (msg.includes('gas'))
+    return 'Transaction failed due to gas estimation. Please try again.';
+  if (msg.includes('nonce'))
+    return 'Transaction conflict. Please wait a moment and try again.';
+  return 'Payment failed. Please try again.';
+}
+
 interface UseTempoPaymentReturn {
   send: (to: Address, amount: string, memo?: string) => Promise<void>;
   isSending: boolean;
@@ -38,6 +54,17 @@ export function useTempoPayment(): UseTempoPaymentReturn {
       const wallet = wallets?.[0];
       if (!wallet) {
         setError('No embedded wallet found');
+        return;
+      }
+
+      // Validate payment amount
+      const numericAmount = parseFloat(amount);
+      if (isNaN(numericAmount) || numericAmount <= 0) {
+        setError('Invalid payment amount');
+        return;
+      }
+      if (numericAmount > MAX_PAYMENT_AMOUNT) {
+        setError(`Amount exceeds maximum of ${MAX_PAYMENT_AMOUNT} aUSD`);
         return;
       }
 
@@ -83,9 +110,14 @@ export function useTempoPayment(): UseTempoPaymentReturn {
           token: alphaUsd,
         });
 
-        setTxHash(receipt.transactionHash);
+        const hash = receipt.transactionHash;
+        if (TX_HASH_REGEX.test(hash)) {
+          setTxHash(hash);
+        } else {
+          setError('Transaction completed but returned an invalid hash.');
+        }
       } catch (err: any) {
-        setError(err?.shortMessage ?? err?.message ?? 'Payment failed');
+        setError(sanitizeError(err));
       } finally {
         setIsSending(false);
       }
