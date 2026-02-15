@@ -158,35 +158,6 @@ Native-only dependencies have `.web.tsx`/`.web.ts` alternatives that Metro resol
 | `expo-image-picker` (selfie capture) | `<input type="file" accept="image/*">` |
 | `expo-file-system` `File` (file reading) | `fetch()` + `FileReader` |
 
-## Security Audit Summary
-
-| # | Finding | Severity |
-|---|---------|----------|
-| 1 | Gemini API key exposed via `EXPO_PUBLIC_` (client-visible by design) | Critical |
-| 2 | Client-side price calculation, no server-side order verification | Critical |
-| 3 | Hardcoded merchant wallet address | High |
-| 4 | No payment amount bounds validation | High |
-| 5 | `node-fetch < 2.6.7` transitive dependency (header forwarding) | High |
-| 6 | Avatar (biometric-derived) data in `localStorage` on web | Medium |
-| 7 | No replay/idempotency protection on payments | Medium |
-| 8 | Unvalidated URL in `Linking.openURL` | Medium |
-| 9 | No CSP or security headers for web deployment | Low |
-| 10 | Raw error messages exposed to users | Low |
-
-**Mitigations for production:**
-- Route Gemini calls through a backend proxy (remove `EXPO_PUBLIC_` prefix for the API key)
-- Implement server-side order verification with signed order payloads
-- Add payment amount validation and idempotency keys
-- Add security headers to `netlify.toml`
-
-**Positive observations:**
-- `.env` is correctly gitignored and never committed
-- No hardcoded secrets in source code
-- `expo-secure-store` used correctly on native for sensitive data
-- No `eval()`, `dangerouslySetInnerHTML`, or XSS vectors found
-- User ID sanitization prevents storage key injection
-- Error logging gated behind `__DEV__` in Gemini service
-
 ## License
 
 MIT
