@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,14 +9,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { type Address } from 'viem';
 import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { DUMMY_CART, type ShippingInfo } from '../../data/dummy';
+import { useTempoPayment } from '../../hooks/useTempoPayment';
 
 const INITIAL_SHIPPING: ShippingInfo = {
   fullName: '',
@@ -65,7 +68,7 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const [shipping, setShipping] = useState<ShippingInfo>(INITIAL_SHIPPING);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { send, isSending, error: paymentError, txHash, reset } = useTempoPayment();
 
   const subtotal = DUMMY_CART.reduce(
     (sum, item) => sum + item.clothingItem.price * item.quantity,
@@ -83,28 +86,53 @@ export default function CheckoutScreen() {
     }
   };
 
-  const handlePayNow = () => {
+  const handlePayNow = async () => {
     const validationErrors = validateShipping(shipping);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+    const merchantAddress = '0xC16C9e5BA678B6B708B0FC7f3601188f40D832DA' as Address;
+
+    await send(merchantAddress, subtotal.toFixed(2), 'Schnell order');
+  };
+
+  // Show success alert when txHash is set
+  useEffect(() => {
+    if (txHash) {
+      const explorerUrl = `https://explore.tempo.xyz/tx/${txHash}`;
       Alert.alert(
-        'Order Placed!',
-        'Your order has been placed successfully. You will receive a confirmation shortly.',
+        'Payment Successful!',
+        `Transaction: ${txHash.slice(0, 10)}...${txHash.slice(-8)}`,
         [
           {
-            text: 'OK',
-            onPress: () => router.replace('/(tabs)'),
+            text: 'View on Explorer',
+            onPress: () => {
+              Linking.openURL(explorerUrl);
+              reset();
+            },
+          },
+          {
+            text: 'Done',
+            onPress: () => {
+              reset();
+              router.replace('/(tabs)');
+            },
           },
         ],
       );
-    }, 1500);
-  };
+    }
+  }, [txHash]);
+
+  // Show error alert
+  useEffect(() => {
+    if (paymentError) {
+      Alert.alert('Payment Failed', paymentError, [
+        { text: 'OK', onPress: reset },
+      ]);
+    }
+  }, [paymentError]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -204,7 +232,7 @@ export default function CheckoutScreen() {
           <Card style={styles.totalCard}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotal</Text>
-              <Text style={styles.totalValue}>${subtotal.toFixed(2)}</Text>
+              <Text style={styles.totalValue}>{subtotal.toFixed(2)} aUSD</Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Shipping</Text>
@@ -213,16 +241,16 @@ export default function CheckoutScreen() {
             <View style={styles.totalDivider} />
             <View style={styles.totalRow}>
               <Text style={styles.grandTotalLabel}>Total</Text>
-              <Text style={styles.grandTotalValue}>${subtotal.toFixed(2)}</Text>
+              <Text style={styles.grandTotalValue}>{subtotal.toFixed(2)} aUSD</Text>
             </View>
           </Card>
 
           {/* Pay Button */}
           <Button
-            title="Pay Now"
+            title={isSending ? 'Processing...' : 'Pay Now'}
             onPress={handlePayNow}
-            loading={isProcessing}
-            disabled={isProcessing}
+            loading={isSending}
+            disabled={isSending}
             style={styles.payButton}
           />
         </ScrollView>

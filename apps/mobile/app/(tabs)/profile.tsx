@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { usePrivy, useEmbeddedEthereumWallet, useEmbeddedSolanaWallet } from '@privy-io/expo';
+import * as Clipboard from 'expo-clipboard';
+import { usePrivy, useEmbeddedEthereumWallet } from '@privy-io/expo';
 import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants/theme';
 import AvatarPlaceholder from '../../components/AvatarPlaceholder';
 import Card from '../../components/Card';
@@ -10,12 +12,28 @@ import { DUMMY_USER, DUMMY_CART, DUMMY_ORDERS } from '../../data/dummy';
 import { useOnboardingStatus } from '../../hooks/useOnboardingStatus';
 
 function WalletCard({ label, address }: { label: string; address: string }) {
+  const [copied, setCopied] = useState(false);
   const truncated = `${address.slice(0, 6)}...${address.slice(-4)}`;
+
+  const handleCopy = async () => {
+    await Clipboard.setStringAsync(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <View style={styles.walletCard}>
+    <TouchableOpacity style={styles.walletCard} onPress={handleCopy} activeOpacity={0.7}>
       <Text style={styles.walletLabel}>{label}</Text>
-      <Text style={styles.walletAddress}>{truncated}</Text>
-    </View>
+      <View style={styles.walletAddressRow}>
+        <Text style={styles.walletAddress}>{truncated}</Text>
+        <Ionicons
+          name={copied ? 'checkmark-circle' : 'copy-outline'}
+          size={18}
+          color={copied ? '#10B981' : Colors.mutedText}
+        />
+      </View>
+      {copied && <Text style={styles.walletCopied}>Copied!</Text>}
+    </TouchableOpacity>
   );
 }
 
@@ -65,7 +83,6 @@ export default function ProfileScreen() {
   const { logout } = usePrivy();
   const { resetOnboarding } = useOnboardingStatus();
   const ethWallet = useEmbeddedEthereumWallet();
-  const solWallet = useEmbeddedSolanaWallet();
 
   const handleLogout = async () => {
     await resetOnboarding();
@@ -73,8 +90,6 @@ export default function ProfileScreen() {
   };
 
   const ethAddress = ethWallet.wallets?.[0]?.address;
-  const solAddress =
-    solWallet.status === 'connected' ? solWallet.wallets?.[0]?.address : undefined;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -109,15 +124,6 @@ export default function ProfileScreen() {
             <Text style={styles.walletPending}>Creating wallet...</Text>
           </View>
         )}
-        {solAddress ? (
-          <WalletCard label="Solana" address={solAddress} />
-        ) : (
-          <View style={styles.walletCard}>
-            <Text style={styles.walletLabel}>Solana</Text>
-            <Text style={styles.walletPending}>Creating wallet...</Text>
-          </View>
-        )}
-
         {/* Shopping Menu */}
         <Text style={styles.sectionTitle}>Shopping</Text>
         <Card style={styles.menuCard}>
@@ -245,11 +251,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: Spacing.xs,
   },
+  walletAddressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   walletAddress: {
     fontSize: FontSizes.md,
     fontWeight: '500',
     color: Colors.primaryText,
     fontFamily: 'monospace',
+  },
+  walletCopied: {
+    fontSize: FontSizes.xs,
+    color: '#10B981',
+    marginTop: Spacing.xs,
   },
   walletPending: {
     fontSize: FontSizes.sm,
