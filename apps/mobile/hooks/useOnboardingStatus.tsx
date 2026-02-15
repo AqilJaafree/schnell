@@ -8,6 +8,7 @@ function getOnboardingKey(userId: string) {
 interface OnboardingContextValue {
   isComplete: boolean | null;
   markComplete: () => Promise<void>;
+  resetOnboarding: () => Promise<void>;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
@@ -38,8 +39,15 @@ export function OnboardingProvider({ userId, children }: { userId: string | unde
     setIsComplete(true);
   }, [userId]);
 
+  const resetOnboarding = useCallback(async () => {
+    if (!userId) return;
+    const key = getOnboardingKey(userId);
+    await SecureStore.deleteItemAsync(key);
+    setIsComplete(false);
+  }, [userId]);
+
   return (
-    <OnboardingContext.Provider value={{ isComplete, markComplete }}>
+    <OnboardingContext.Provider value={{ isComplete, markComplete, resetOnboarding }}>
       {children}
     </OnboardingContext.Provider>
   );

@@ -66,7 +66,7 @@ export default function AvatarScreen() {
 
   const handleGetStarted = async () => {
     await markComplete();
-    router.replace('/(tabs)');
+    // AuthNavigator will handle navigation to /(tabs) when onboardingComplete becomes true
   };
 
   return (

@@ -7,6 +7,7 @@ import { Colors, Fonts, FontSizes, Spacing, BorderRadius } from '../../constants
 import AvatarPlaceholder from '../../components/AvatarPlaceholder';
 import Card from '../../components/Card';
 import { DUMMY_USER, DUMMY_CART, DUMMY_ORDERS } from '../../data/dummy';
+import { useOnboardingStatus } from '../../hooks/useOnboardingStatus';
 
 function WalletCard({ label, address }: { label: string; address: string }) {
   const truncated = `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -62,8 +63,14 @@ function OrderStatusBadge({ status }: { status: string }) {
 export default function ProfileScreen() {
   const router = useRouter();
   const { logout } = usePrivy();
+  const { resetOnboarding } = useOnboardingStatus();
   const ethWallet = useEmbeddedEthereumWallet();
   const solWallet = useEmbeddedSolanaWallet();
+
+  const handleLogout = async () => {
+    await resetOnboarding();
+    await logout();
+  };
 
   const ethAddress = ethWallet.wallets?.[0]?.address;
   const solAddress =
@@ -154,7 +161,7 @@ export default function ProfileScreen() {
         </Card>
 
         {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton} onPress={logout} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>

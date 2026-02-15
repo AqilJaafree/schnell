@@ -14,7 +14,7 @@ export async function generateAvatarFromSelfie(
 
   const genAI = new GoogleGenerativeAI(API_KEY);
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-exp',
+    model: 'gemini-2.5-flash-image',
     generationConfig: {
       responseModalities: ['image', 'text'],
     } as any,
@@ -34,21 +34,21 @@ Requirements:
 - Leave clear separation between top clothing area and bottom clothing area
 - No accessories, no patterns on clothes`;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
-
   try {
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: selfieBase64,
-          mimeType,
+    const result = await Promise.race([
+      model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: selfieBase64,
+            mimeType,
+          },
         },
-      },
+      ]),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT')), 30000)
+      ),
     ]);
-
-    clearTimeout(timeout);
 
     const response = result.response;
     const parts = response.candidates?.[0]?.content?.parts ?? [];
@@ -61,10 +61,10 @@ Requirements:
 
     throw new Error('No image was generated. Please try again.');
   } catch (err: any) {
-    clearTimeout(timeout);
-    if (err.name === 'AbortError') {
+    if (__DEV__) console.error('[Gemini]', err);
+    if (err.message === 'TIMEOUT') {
       throw new Error('Avatar generation timed out. Please try again.');
     }
-    throw err;
+    throw new Error('Failed to generate avatar. Please try again.');
   }
 }

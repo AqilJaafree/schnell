@@ -41,11 +41,10 @@ function AuthNavigator() {
     const inOnboarding = currentRoute === 'onboarding';
     const inCart = currentRoute === 'cart';
     const onLogin = currentRoute === 'login';
-    const onSplash = currentRoute === undefined || currentRoute === '';
 
     if (!user) {
-      // Not authenticated — go to login (unless already on splash or login)
-      if (!onSplash && !onLogin) {
+      // Not authenticated — go to login
+      if (!onLogin) {
         router.replace('/login');
       }
     } else if (!onboardingComplete) {

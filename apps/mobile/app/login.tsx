@@ -31,7 +31,7 @@ export default function LoginScreen() {
       await sendCode({ email: email.trim() });
       setStep('otp');
     } catch (err) {
-      console.error('Failed to send code:', err);
+      if (__DEV__) console.error('Failed to send code:', err);
     }
   };
 
@@ -40,7 +40,7 @@ export default function LoginScreen() {
     try {
       await loginWithCode({ code: code.trim(), email: email.trim() });
     } catch (err) {
-      console.error('Failed to verify code:', err);
+      if (__DEV__) console.error('Failed to verify code:', err);
     }
   };
 
